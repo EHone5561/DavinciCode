@@ -16,13 +16,12 @@ def make_hand(Code_b, Code_w): #게임 시작전 기본 패를 분배합니다.
     print("당신은 4개의 패를 손에 집었습니다.")
     return (Code_b, Code_w, Player_hand, Computer_hand)
 
-def make_CodeDummy(Code_b, Code_w): #게임 시작 패 분배가 끝난 후 패 산을 만드는 메소드입니다.
-    Code = Code_b + Code_w
-    Code.append("Jb") #검은색 조커 추가
-    Code.append("Jw") #하얀색 조커 추가
-    return Code
+def add_joker(Code_b, Code_w): #게임 시작 패 분배가 끝난 후 패 산을 만드는 메소드입니다.
+    Code_b.append("Jb") #검은색 조커 추가
+    Code_w.append("Jw") #하얀색 조커 추가
+    return (Code_b, Code_w)
 
-def Computer_Start(Code_b, Code_w, Computer_hand):
+def Computer_Start(Code_b, Code_w, Computer_hand): ######인공지능######
     import random
     select_white = random.randint(0,4) #임시 #뽑은 하얀 색 패의 수
     if select_white > 0: #예외 처리
@@ -119,14 +118,37 @@ def sort_Joker(Code, joker_info): #조커의 위치를 매개변수로 받아 �
         pass
     return (Code, joker_info)
 
-def draw_phase_player(Code, joker_info, receiver):
+def draw_phase_player(Code_b, Code_w, joker_info, receiver):
     if receiver[-1] == 'jb':
         receiver = receiver[:-1]
     elif receiver[-1] == 'jw':
         receiver = receiver[:-1]
     else:
         pass
-    Code, receiver = receive_Code(Code, receiver)
+    if (len(Code_b) == 0) and (len(Code_w) == 0):
+        print("더 이상 가져올 수 있는 패가 없어 과정을 생략합니다.")
+    else:
+        while(True):
+            print(f"검은색 패 수 : {len(Code_b)}, 흰색 패 수 {len(Code_w)}")
+            act = input("무슨 색 패를 뽑으시겠습니까?(b or w): ")
+            if act in ['B', 'b']:
+                if (len(Code_b) == 0):
+                    print("해당 색의 패가 부족하여 다른 색의 패를 드로우 하였습니다.")
+                    Code_w, receiver = receive_Code(Code_w, receiver)
+                    break
+                else:
+                    Code_b, receiver = receive_Code(Code_b, receiver)
+                    break
+            elif act in ['W','w']:
+                if (len(Code_w) == 0):
+                    print("해당 색의 패가 부족하여 다른 색의 패를 드로우 하였습니다.")
+                    Code_b, receiver = receive_Code(Code_b, receiver)
+                    break
+                else:
+                    Code_w, receiver = receive_Code(Code_w, receiver)
+                    break
+            else:
+                print("제대로 입력해주세요(b or w)")
     receiver = sort_Code(receiver)
     receiver, joker_info = find_Player_Joker(receiver, joker_info)
     receiver, joker_info = delete_joker(receiver, joker_info)
@@ -135,31 +157,32 @@ def draw_phase_player(Code, joker_info, receiver):
         receiver, joker_info = sort_Joker(receiver, joker_info)
     else:
         pass
-    return (Code, joker_info, receiver)
+    return (Code_b, Code_w, joker_info, receiver)
 
 
 def main():
     Code_b, Code_w = make_Code()
     Code_b, Code_w, Player_hand, Computer_hand = make_hand(Code_b, Code_w)
-    Code = shuffle_Code(make_CodeDummy(Code_b, Code_w))
+    Code_b, Code_w = add_joker(Code_b, Code_w)
+    Code_b = shuffle_Code(Code_b)
+    Code_w = shuffle_Code(Code_w)
     joker_info_computer = []
     joker_info_player = []
-    print(Code)
     print()
     print("플레이어의 손 패: ", sort_Code(Player_hand))
     print()
     print("컴퓨터의 손 패: ", sort_Code(Computer_hand))
     while True:
-        Code, joker_info_player, Player_hand = draw_phase_player(Code, joker_info_player, Player_hand)
+        Code_b, Code_w, joker_info_player, Player_hand = draw_phase_player(Code_b, Code_w, joker_info_player, Player_hand)
         print("플레이어의 손 패: ", Player_hand)
         import time
-        time.sleep(5)
+        time.sleep(2)
         # Code, joker_info_computer, Computer_hand = draw_phase_computer(Code, )
 
 
 main()
 #일단 문제점을 적어두었다.
-#첫 째, 조커를 마지막에서 인식해서 플레이어가 원하는 위치로 끼워넣기가 가능하다. 그러나 마지막에 있는 조커가 사라지지 않고 한 번 뒤에 사라진다.
+#첫 째, 조커를 마지막에서 인식해서 플레이어가 원하는 위치로 끼워넣기가 가능하다. 그러나 마지막에 있는 조커가 사라지지 않고 한 번 뒤에 사라진다. < 해결 필요
 #둘 째, 플레이어의 드로우 페이즈에서 조커를 인식하는 것을 구현해 두었지만, 플레이어는 색깔과 남아있는 패의 수를 출력받아
-#원하는 색깔의 패를 출력할 수 있도록 구현해야한다.
+#원하는 색깔의 패를 출력할 수 있도록 구현해야한다. << 해결 완료 Code_b 와 Code_w를 따로 둔다.
 #향후 업데이트 필요
