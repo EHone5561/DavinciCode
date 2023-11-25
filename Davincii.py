@@ -272,10 +272,17 @@ def reason_phase_player(draw, Player_hand, Computer_hand, reveal_list_player, re
                 value = input("상대의 패를 예측해주세요(ex: 3b, 7w, jb)):")
                 assert (value[-1] in ['b', 'B', 'w', 'W']) #마지막 글자가 색깔과 관련되어 있는 지를 확인합니다.
                 if (len(value) == 2): #일의 자리 숫자인 경우를 확인합니다.
-                    if value[0] in ['J', 'j']:
-                        pass
-                    elif int(0 <= value[0] <= 9):
-                        pass
+
+                    if (value[0]).isdigit():
+                        if (0 <= int(value[0]) <= 9):
+                            pass
+                        else:
+                            raise AssertionError
+                    else:  
+                        if value[0] in ['J', 'j']:
+                            pass
+                        else:
+                            raise AssertionError
                 elif (len(value) == 3): #십의 자리 숫자인 경우를 확인합니다.
                     assert(int(value[0]) == 1)
                     assert(0 <= int(value[1]) <= 1)
