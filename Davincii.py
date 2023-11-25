@@ -23,11 +23,11 @@ def Computer_Start(Code_b, Code_w, Computer_hand): ######인공지능###### #컴
     import random
     select_white = random.randint(0,4) #임시 #뽑은 하얀 색 패의 수의 수를 random.randint로 구현해놓았습니다. 그러나 이는 인공지능을 사용하여 더욱 효율적으로 결정되어야 합니다.
     if select_white > 0: #예외 처리
-        for _ in range(0, select_white):
-            Code_w, Computer_hand = receive_Code(Code_w, Computer_hand)
+        for _ in range(0, select_white): #dummy(list) 쓰이지 않지만 argument를 충족하기 위해 임시로 넣음
+            dummy, Code_w, Computer_hand = receive_Code([], Code_w, Computer_hand)
     if select_white < 4: #예외 처리
         for _ in range(0, 4 - select_white):
-            Code_b, Computer_hand = receive_Code(Code_b, Computer_hand)
+            dummy, Code_b, Computer_hand = receive_Code([], Code_b, Computer_hand)
     return (Code_b, Code_w, Computer_hand)
 
 def Player_Start(Code_b, Code_w, Player_hand): #플레이어가 게임을 시작하기 전 패를 가져오는 메소드입니다.
@@ -36,10 +36,10 @@ def Player_Start(Code_b, Code_w, Player_hand): #플레이어가 게임을 시작
         assert (0 <= select_black <= 4)
         if select_black > 0:
             for _ in range(0, select_black):
-                Code_b, Player_hand = receive_Code(Code_b, Player_hand)
+                dummy, Code_b, Player_hand = receive_Code([], Code_b, Player_hand)
         if select_black < 4:
             for _ in range(0, 4 - select_black):
-                Code_w, Player_hand = receive_Code(Code_w, Player_hand)
+                dummy, Code_w, Player_hand = receive_Code([], Code_w, Player_hand)
 
     except(ValueError):
         print("정확한 값을 입력해주세요.")
@@ -57,10 +57,11 @@ def shuffle_Code(Code): #가져온 코드(list)를 셔플하는 메소드입니�
     random.shuffle(Code)
     return Code #섞인 패산 
 
-def receive_Code(Code, receiver): #임의의 패산에서 하나의 패를 receiver에게 전달하는 메소드입니다.
+def receive_Code(draw, Code, receiver): #임의의 패산에서 하나의 패를 receiver에게 전달하는 메소드입니다.
     receiver.append(Code[0])
+    draw.append(Code[0])
     Code = Code[1:]
-    return (Code, receiver) #남은 패산과 추가된 손패
+    return (draw, Code, receiver) #남은 패산과 추가된 손패
 
 def sort_Code(Code): # 컴퓨터나 플레이어가 패를 가져온 후 올바른 순서로 정렬하기 위한 메소드입니다.
     Code.sort(key = lambda x: (x[-1].isdigit(), int(x[:-1]) if x[:-1].isdigit() else float('inf'), x))
@@ -131,7 +132,6 @@ def delete_joker(Code, joker_info): #이미 배열한 조커가 마지막에도 
     return (Code, joker_info)
 def sort_Joker(Code, joker_info): #패를 정렬하고 맨 뒤에 온 조커를 joker_info에 있는 조커의 정보에 따라 재배치하는 메소드입니다.
     if len(joker_info) == 2:
-        
         Code.insert(joker_info[1], joker_info[0])
     elif (len(joker_info) == 4):
         Code.insert(joker_info[1], joker_info[0])
@@ -140,7 +140,7 @@ def sort_Joker(Code, joker_info): #패를 정렬하고 맨 뒤에 온 조커를 
         pass
     return (Code, joker_info)
 
-def draw_phase_player(Code_b, Code_w, joker_info, receiver): #플레이어가 드로우하는 페이즈로 관련 메소드들을 순서에 따라 배치해놓은 메소드입니다.
+def draw_phase_player(draw, Code_b, Code_w, joker_info, receiver): #플레이어가 드로우하는 페이즈로 관련 메소드들을 순서에 따라 배치해놓은 메소드입니다.
     if receiver[-1] == 'jb':
         receiver = receiver[:-1]
     elif receiver[-1] == 'jw':
@@ -151,23 +151,26 @@ def draw_phase_player(Code_b, Code_w, joker_info, receiver): #플레이어가 �
         print("더 이상 가져올 수 있는 패가 없어 과정을 생략합니다.")
     else:
         while(True):
+            print("--------------------------------------------------------------------")
             print(f"검은색 패 수 : {len(Code_b)}, 흰색 패 수 {len(Code_w)}")
+            print()
             act = input("무슨 색 패를 뽑으시겠습니까?(b or w): ")
+            print("--------------------------------------------------------------------")
             if act in ['B', 'b']:
                 if (len(Code_b) == 0):
                     print("해당 색의 패가 부족하여 다른 색의 패를 드로우 하였습니다.")
-                    Code_w, receiver = receive_Code(Code_w, receiver)
+                    draw, Code_w, receiver = receive_Code(draw, Code_w, receiver)
                     break
                 else:
-                    Code_b, receiver = receive_Code(Code_b, receiver)
+                    draw, Code_b, receiver = receive_Code(draw, Code_b, receiver)
                     break
             elif act in ['W','w']:
                 if (len(Code_w) == 0):
                     print("해당 색의 패가 부족하여 다른 색의 패를 드로우 하였습니다.")
-                    Code_b, receiver = receive_Code(Code_b, receiver)
+                    draw, Code_b, receiver = receive_Code(draw, Code_b, receiver)
                     break
                 else:
-                    Code_w, receiver = receive_Code(Code_w, receiver)
+                    draw, Code_w, receiver = receive_Code(draw, Code_w, receiver)
                     break
             else:
                 print("제대로 입력해주세요(b or w)")
@@ -179,9 +182,9 @@ def draw_phase_player(Code_b, Code_w, joker_info, receiver): #플레이어가 �
         receiver, joker_info = sort_Joker(receiver, joker_info)
     else:
         pass
-    return (Code_b, Code_w, joker_info, receiver)
+    return (draw, Code_b, Code_w, joker_info, receiver)
 
-def draw_phase_computer(Code_b, Code_w, joker_info, receiver): ######인공지능#######
+def draw_phase_computer(draw, Code_b, Code_w, joker_info, receiver): ######인공지능#######
     if receiver[-1] == 'jb':                                  #컴퓨터가 드로우하는 페이즈로 관련 메소드들을 순서에 따라 배치해놓은 메소드입니다.
         receiver = receiver[:-1]                              #컴퓨터가 드로우할 색깔의 패를 결정하는 과정을 random.randint로 구현하였습니다. 그러나 이는 인공지능을 사용하여 효율적으로 결정되어야합니다.
     elif receiver[-1] == 'jw':
@@ -190,26 +193,27 @@ def draw_phase_computer(Code_b, Code_w, joker_info, receiver): ######인공지�
         pass
     if (len(Code_b) == 0) and (len(Code_w) == 0):
         print("더 이상 가져올 수 있는 패가 없어 과정을 생략합니다.")
+        draw = False
     else:
         while(True):
             import random
             act = random.randint(0,1)
             if act == 0:
                 if (len(Code_b) == 0):
-                    Code_w, receiver = receive_Code(Code_w, receiver)
+                    draw, Code_w, receiver = receive_Code(draw, Code_w, receiver)
                     print("컴퓨터는 하얀색 패를 하나 가져갔습니다.")
                     break
                 else:
-                    Code_b, receiver = receive_Code(Code_b, receiver)
+                    draw, Code_b, receiver = receive_Code(draw, Code_b, receiver)
                     print("컴퓨터는 검은색 패를 하나 가져갔습니다.")
                     break
             elif act == 1:
                 if (len(Code_w) == 0):
-                    Code_b, receiver = receive_Code(Code_b, receiver)
+                    draw, Code_b, receiver = receive_Code(draw, Code_b, receiver)
                     print("컴퓨터는 검은색 패를 하나 가져갔습니다.")
                     break
                 else:
-                    Code_w, receiver = receive_Code(Code_w, receiver)
+                    draw, Code_w, receiver = receive_Code(draw, Code_w, receiver)
                     print("컴퓨터는 하얀색 패를 하나 가져갔습니다.")
                     break
             else:
@@ -223,7 +227,7 @@ def draw_phase_computer(Code_b, Code_w, joker_info, receiver): ######인공지�
         receiver, joker_info = sort_Joker(receiver, joker_info)
     else:
         pass
-    return (Code_b, Code_w, joker_info, receiver)
+    return (draw, Code_b, Code_w, joker_info, receiver)
 
 def encrypt_Code(Code, Reveal_list): #Reveal_list(정답이 맞춰졌거나, 틀렸을 시에 공개되는 패의 정보를 담고 있음)를 참조하여 컴퓨터 혹은 플레이어의 코드를 암호화함
     encrypted_Code = []
@@ -231,7 +235,13 @@ def encrypt_Code(Code, Reveal_list): #Reveal_list(정답이 맞춰졌거나, 틀
         if elem in Reveal_list:
             encrypted_Code.append(elem)
         else:
-            encrypted_Code.append('▣')
+            if elem[-1] == 'b':
+                encrypted_Code.append('▣ b')
+            elif elem[-1] == 'w':
+                encrypted_Code.append('▣ w')
+            else:
+                print("디버깅용  > 오류 발생")
+                exit(0)
     return encrypted_Code
 
 def view_hand_player(Player_hand, Computer_hand, reveal_info_computer):
@@ -246,51 +256,86 @@ def find_code_in_reveal(Code, reveal):
     else:
         return False
 
-def reason_phase_player(Player_hand, Computer_hand, reveal_list_player, reveal_list_computer, Game_over):
+def reason_phase_player(draw, Player_hand, Computer_hand, reveal_list_player, reveal_list_computer, Game_over):
     while(True):
         print()
-        idx = int(input("맞출 상대의 패의 번호를 선택해주세요(왼쪽부터 0): "))
-        value = input("상대의 패를 예측해주세요(ex: 3b, 7w, jb)):")
-        if (value[0] in (['j'] + [f"{i}" for i in range(12)])):
+        while(True):
+            try:
+                idx = int(input("맞출 상대의 패의 번호를 선택해주세요(왼쪽부터 0): "))
+                if 0 <= idx <= (len(Computer_hand) - 1):
+                    break
+            except(ValueError):
+                print("위치 번호를 정확하게 입력해주세요.")
+        while(True):
+            try:
+                print()
+                value = input("상대의 패를 예측해주세요(ex: 3b, 7w, jb)):")
+                assert (value[-1] in ['b', 'B', 'w', 'W']) #마지막 글자가 색깔과 관련되어 있는 지를 확인합니다.
+                if (len(value) == 2): #일의 자리 숫자인 경우를 확인합니다.
+                    assert((0 <= int(value[0]) <= 9) or (value[0] in ['j', 'J']))
+                elif (len(value) == 3): #십의 자리 숫자인 경우를 확인합니다.
+                    assert(int(value[0]) == 1)
+                    assert(0 <= int(value[1]) <= 1)
+                break
+            except(ValueError):
+                print("정확하게 입력해주세요.")
+            except(AssertionError):
+                print("숫자 + 색깔의 형식으로 다시 입력해주세요.")
+        if (value[0] in (['j', 'J'] + [f"{i}" for i in range(12)])):
             if value == Computer_hand[idx]:
+                print("--------------------------------------------------------------------")
                 print("정답입니다!")
                 print(f"상대의 패 {Computer_hand[idx]} 를 공개합니다.")
+                print("--------------------------------------------------------------------")
                 reveal_list_computer.append(Computer_hand[idx])
-                act = input("더 맞추시겠습니까? (y n) ")
-                if act in ['Y', 'y']:
-                    print("한 번 더 추리를 시작합니다.")
-                elif act in ['N', 'n']:
-                    print("추리를 종료합니다.")
-                    break
+                print()
+                if len(reveal_list_computer) != len(Computer_hand):
+                    act = input("더 맞추시겠습니까? (y n) ")
+                    if act in ['Y', 'y']:
+                        print("한 번 더 추리를 시작합니다.")
+                    elif act in ['N', 'n']:
+                        print("추리를 종료합니다.")
+                        break
+                    else:
+                        print("입력 오류입니다. 추리를 종료합니다.")
+                        break
                 else:
-                    print("입력 오류입니다. 추리를 종료합니다.")
                     break
             else:
+                print("--------------------------------------------------------------------")
                 print("오답입니다...")
-                while(True):
-                    idx = int(input("상대에게 공개할 나의 패 번호를 선택해주세요(왼쪽부터 0):"))
-                    if find_code_in_reveal(Player_hand[idx], reveal_list_player):
-                        print()
-                        print("이미 공개되어진 정보입니다. 다른 번호를 입력해주세요.")
-                    else:
-                        break
-                print(f"자신의 패 {Player_hand[idx]} 를 공개합니다.")
-                reveal_list_player.append(Player_hand[idx])
+                if draw != []:
+                    for i, elem in enumerate(Player_hand):
+                        if elem == draw[0]:
+                            print(f"아까 드로우했던 패 {elem} 를 공개합니다.")
+                            reveal_list_player.append(Player_hand[i])
+                        else:
+                            pass
+                else:
+                    pass
+                print("--------------------------------------------------------------------")
+                
                 print("추리를 종료합니다.")
                 break
         else:
             print("입력 오류입니다. 다시 입력해주세요.")
     if len(reveal_list_computer) == len(Computer_hand):
+        print("--------------------------------------------------------------------")
         print("상대방의 모든 패가 공개되었습니다. 당신의 승리입니다.")
+        exit(0)
+        print("--------------------------------------------------------------------")
         Game_Over = True
     elif len(reveal_list_player) == len(Player_hand):
+        print("--------------------------------------------------------------------")
         print("플레이어의 모든 패가 공개되었습니다. 당신의 패배입니다.")
+        exit(0)
+        print("--------------------------------------------------------------------")
         Game_Over = True
     else:
         pass
     return (Player_hand, Computer_hand, reveal_list_player, reveal_list_computer, Game_over)
 
-def reason_phase_computer(Player_hand, Computer_hand, reveal_list_player, reveal_list_computer, Game_Over): ####### 인공지능 #######
+def reason_phase_computer(draw, Player_hand, Computer_hand, reveal_list_player, reveal_list_computer, Game_Over): ####### 인공지능 #######
     import random
     import time
     ###########################################################
@@ -302,41 +347,56 @@ def reason_phase_computer(Player_hand, Computer_hand, reveal_list_player, reveal
         value = '3b'
         if (value[0] in (['j'] + [f"{i}" for i in range(12)])):
             if value == Player_hand[idx]:
+                print("--------------------------------------------------------------------")
                 print("상대가 정답을 맞췄습니다")
                 time.sleep(1)
                 print(f"플레이어의 패 {Player_hand[idx]} 를 공개합니다.")
+                print("--------------------------------------------------------------------")
                 time.sleep(1)
                 reveal_list_player.append(Player_hand[idx])
-                act = 'n' ##### 일단 컴퓨터는 재 추리를 하지 않도록 코드를 짰다.
-                if act in ['Y', 'y']:
-                    print("상대는 한 번 더 추리를 시작합니다.")
-                elif act in ['N', 'n']:
-                    print("상대가 추리를 종료합니다.")
-                    break
+                if len(reveal_list_player) != len(Player_hand):
+                    act = 'n' ##### 일단 컴퓨터는 재 추리를 하지 않도록 코드를 짰다.
+                    if act in ['Y', 'y']:
+                        print("상대는 한 번 더 추리를 시작합니다.")
+                    elif act in ['N', 'n']:
+                        print("상대가 추리를 종료합니다.")
+                        break
+                    else:
+                        print("Value 오류")
+                        break
                 else:
-                    print("Value 오류")
                     break
             else:
+                print("--------------------------------------------------------------------")
                 print("상대가 정답을 맞추지 못하였습니다. ")
                 time.sleep(1)
-                while (True):
-                    idx = random.randint(0, len(Computer_hand) - 1)
-                    if find_code_in_reveal(Computer_hand[idx], reveal_list_computer):
-                        pass
-                    else:
-                        break
-                print(f"상대가 패 {Computer_hand[idx]} 를 공개합니다.")
+                if draw != []:
+                    for i, elem in enumerate(Computer_hand):
+                        if elem == draw[0]:
+                            print(f"상대가 드로우했던 패 {elem} 를 공개합니다.")
+                            reveal_list_computer.append(Computer_hand[i])
+                        else:
+                            pass
+                else:
+                    pass
+                print("--------------------------------------------------------------------")
                 time.sleep(1)
-                reveal_list_computer.append(Computer_hand[idx])
+                
                 print("추리를 종료합니다.")
                 break
         else:
             print("입력 오류입니다. 다시 입력해주세요.")
     if len(reveal_list_computer) == len(Computer_hand):
+        print("--------------------------------------------------------------------")
         print("컴퓨터의 모든 패가 공개되었습니다. 당신의 승리입니다.")
+        exit(0)
+        print("--------------------------------------------------------------------")
         Game_Over = True
     elif len(reveal_list_player) == len(Player_hand):
+        print("--------------------------------------------------------------------")
         print("플레이어의 모든 패가 공개되었습니다. 당신의 패배입니다.")
+        exit(0)
+        print("--------------------------------------------------------------------")
         Game_Over = True
     else:
         pass
@@ -349,6 +409,10 @@ def reason_phase_computer(Player_hand, Computer_hand, reveal_list_player, reveal
 def main(): #게임을 구성하는 메소드입니다.
     import time
     ############## 사전 준비 페이즈 ##############
+    print("--------------------------------------------------------------------")
+    print("곧 게임을 시작합니다.")
+    print("--------------------------------------------------------------------")
+    time.sleep(1)
     Game_Over = False #게임이 종료되었는 지 관한 boolean 변수
     Code_b, Code_w = make_Code()
     Code_b, Code_w, Player_hand, Computer_hand = make_hand(Code_b, Code_w)
@@ -360,22 +424,26 @@ def main(): #게임을 구성하는 메소드입니다.
     reveal_info_player = []
     reveal_info_computer = []
     ############## 사전 준비 페이즈 ##############
-
+    print("--------------------------------------------------------------------")
+    print("게임이 시작되었습니다.")
     print()
     print("플레이어의 손 패: ", sort_Code(Player_hand))
     print()
     print("컴퓨터의 손 패: ", sort_Code(Computer_hand)) #제대로 드로우하고 있는 확인하는 구문입니다. 게임과는 무관 
-
+    print("--------------------------------------------------------------------")
     ############## 게임 실행 페이즈 ##############
     while not Game_Over:
+        draw_player = []
+        print("--------------------------------------------------------------------")
         print()
         print("플레이어의 차례입니다.")
         print()
+        print("--------------------------------------------------------------------")
         time.sleep(1)
-        Code_b, Code_w, joker_info_player, Player_hand = draw_phase_player(Code_b, Code_w, joker_info_player, Player_hand)
+        draw_player, Code_b, Code_w, joker_info_player, Player_hand = draw_phase_player(draw_player, Code_b, Code_w, joker_info_player, Player_hand)
         view_hand_player(Player_hand, Computer_hand, reveal_info_computer)
         ###### 정답 추리 페이즈 #######
-        Player_hand, Computer_hand, reveal_info_player, reveal_info_computer, Game_Over = reason_phase_player(Player_hand, Computer_hand, reveal_info_player, reveal_info_computer, Game_Over)
+        Player_hand, Computer_hand, reveal_info_player, reveal_info_computer, Game_Over = reason_phase_player(draw_player, Player_hand, Computer_hand, reveal_info_player, reveal_info_computer, Game_Over)
         if Game_Over:
             print("게임이 종료되었습니다.")
             break
@@ -383,13 +451,16 @@ def main(): #게임을 구성하는 메소드입니다.
             pass
         ###### 정답 추리 페이즈 #######
         time.sleep(2)
+        draw_computer = []
+        print("--------------------------------------------------------------------")
         print()
         print("컴퓨터의 차례입니다.")
         print()
+        print("--------------------------------------------------------------------")
         time.sleep(1)
-        Code_b, Code_w, joker_info_computer, Computer_hand = draw_phase_computer(Code_b, Code_w, joker_info_computer, Computer_hand)
+        draw_computer, Code_b, Code_w, joker_info_computer, Computer_hand = draw_phase_computer(draw_computer, Code_b, Code_w, joker_info_computer, Computer_hand)
         ###### 정답 추리 페이즈 #######
-        reason_phase_computer(Player_hand, Computer_hand, reveal_info_player, reveal_info_computer, Game_Over)
+        Player_hand, Computer_hand, reveal_list_player, reveal_list_computer, Game_Over = reason_phase_computer(draw_computer, Player_hand, Computer_hand, reveal_info_player, reveal_info_computer, Game_Over)
         if Game_Over:
             print("게임이 종료되었습니다.")
             break
@@ -399,11 +470,3 @@ def main(): #게임을 구성하는 메소드입니다.
         time.sleep(2)
     ############## 게임 실행 페이즈 ##############
 main()
-#일단 문제점을 적어두었다.
-
-#첫 째, 조커를 마지막에서 인식해서 플레이어가 원하는 위치로 끼워넣기가 가능하다. 그러나 마지막에 있는 조커가 사라지지 않고 한 번 뒤에 사라진다. < 해결 필요
-
-#둘 째, 플레이어의 드로우 페이즈에서 조커를 인식하는 것을 구현해 두었지만, 플레이어는 색깔과 남아있는 패의 수를 출력받아
-#원하는 색깔의 패를 출력할 수 있도록 구현해야한다. << 해결 완료 Code_b 와 Code_w를 따로 둔다.
-
-#향후 업데이트 필요
