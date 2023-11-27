@@ -1,7 +1,6 @@
 import random
 
 #-------------------------------------------------------------------------------------------------------------------------
-C:\Users\dxer1\OneDrive\문서\인공지능의이해 과제\DavinciAI2.py
 import time
 def receive_Code(draw, Code, receiver): #임의의 패산에서 하나의 패를 receiver에게 전달하는 메소드입니다.
         receiver.append(Code[0])
@@ -73,10 +72,12 @@ def find_Player_Joker(Code, joker_info): #플레이어가 가져온 패가 조�
         joker = True
         if Code[-1][1] == 'b':
             black = True
+        Code = Code[:-1]
     if joker:
         try:
+            print(Code)
+            print()
             act = int(input("조커를 둘 위치를 선택하세요 (맨 앞을 0부터):"))
-            #act = len(Code)//2
             assert (0 <= act <= (len(Code) + 1))
         except (ValueError):
             print("정확한 위치를 입력해주세요.")
@@ -94,7 +95,6 @@ def find_Player_Joker(Code, joker_info): #플레이어가 가져온 패가 조�
             Code.insert(act, 'jw')
             joker_info.append('jw')
             joker_info.append(act)
-        Code = Code[:-1]
     return (Code, joker_info)
 
 def find_Computer_Joker(Code, joker_info): ######인공지능###### #컴퓨터가 가져온 패가 조커인 경우를 확인하고  조커를 배치하는 메소드입니다.
@@ -121,14 +121,12 @@ def find_Computer_Joker(Code, joker_info): ######인공지능###### #컴퓨터�
     return (Code, joker_info)
 
 def delete_joker(Code, joker_info): #이미 배열한 조커가 마지막에도 오는 문제를 해결하기위해 만든 메소드였다. 신경쓰지 말 것
-    if len(joker_info) != []:
-        if Code[-1] == 'jb':
-            Code = Code[:-1]
-        elif Code[-1] == 'jw':
-            Code = Code[:-1]
-        else:
-            pass
+    if 'jw' in Code:
+        Code.remove('jw')
+    if 'jb' in Code:
+        Code.remove('jb')
     return (Code, joker_info)
+
 def sort_Joker(Code, joker_info): #패를 정렬하고 맨 뒤에 온 조커를 joker_info에 있는 조커의 정보에 따라 재배치하는 메소드입니다.
     if len(joker_info) == 2:
         Code.insert(joker_info[1], joker_info[0])
@@ -304,7 +302,7 @@ class GameOfDavinci(TwoPlayerGame):
         self.joker_info_player = []
         self.reveal_info_player = []
         self.reveal_info_computer = []
-        self.wronganswers = [] #틀린 시도를 기록해두고, left에서 빼는 용도로 기획했었다.
+        self.wronganswers = [[],[],[]] #틀린 시도를 기록해두고, possible_moves에서 빼는 용도로 기획했었다.
 
         #self.card_deck = self.Code_b + self.Code_w
 
@@ -335,7 +333,7 @@ class GameOfDavinci(TwoPlayerGame):
             for card in self.left[self.opponent_index]:
                 output.append([i, card])
             
-        for content in self.wronganswers:
+        for content in self.wronganswers[self.current_player]:
             if content in output:
                 output.remove(content)
 
@@ -368,7 +366,7 @@ class GameOfDavinci(TwoPlayerGame):
   
             #print(self.gameboard)
         else:
-            self.wronganswers.append(move)
+            self.wronganswers[self.current_player].append(move)
             print("--------------------------------------------------------------------")
             print("오답입니다...")
             if self.draw[self.current_player] != []:
@@ -381,7 +379,7 @@ class GameOfDavinci(TwoPlayerGame):
                             self.reveal_info_computer.append(self.gameboard[self.current_player][i])
                         if(elem in self.left[self.current_player]):
                             self.left[self.current_player].remove(elem)
-                        print("AI플레이어가 예측할 수 있는 당신 패의 후보군 : ", self.left[self.opponent_index])
+                        #print("AI플레이어가 예측할 수 있는 당신 패의 후보 인덱스 : ", self.left[self.opponent_index])
 
                     else:
                         pass
@@ -423,7 +421,7 @@ class GameOfDavinci(TwoPlayerGame):
         print()
         print()
         
-        print("상대편의 남아있는 인덱스", game.left_index[game.opponent_index]) #제대로 동작하는지 확인용
+        #print("상대편의 남아있는 인덱스", game.left_index[game.opponent_index]) #제대로 동작하는지 확인용
     
     
     def scoring(self):
@@ -456,14 +454,15 @@ while not game.is_over():
         print("당신이 뽑은 카드 : ", game.draw[game.current_player][-1])  #뽑은 카드 확인용으로 임시로 작성했다.
         if(game.draw[game.current_player][-1] in game.left[game.opponent_index]):
             game.left[game.opponent_index].remove(game.draw[game.current_player][-1])
+        game.show()
 
         poss = game.possible_moves()
-        '''
+        
         for index, move in enumerate(poss):
             print("{} : {}".format(index, move)) #possiblemove들을 출력하는듯 하다.
-        '''
+        
                      
-        print("주의! 당신의 선택이 possible_move 리스트에 없으면 게임이 진행되지 않음")
+        print("< 주의! 당신의 선택이 possible_move 리스트에 없으면 게임이 진행되지 않음> ")
         idx, value = reason_phase_player(game.Computer_hand)
         move = [idx, value]
         while (move not in poss):
@@ -484,7 +483,7 @@ while not game.is_over():
             game.left[game.opponent_index].remove(game.draw[game.current_player][-1])
 
         move = game.get_move()
-        #print("AI plays {}".format(move))
+        print("AI plays {}".format(move))
     
     game.play_move(move)
 
