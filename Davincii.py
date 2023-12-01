@@ -240,22 +240,24 @@ def encrypt_Code(Code, Reveal_list): #Reveal_list(정답이 맞춰졌거나, 틀
                 exit(0)
     return encrypted_Code
 
-def view_hand_player(Player_hand, Computer_hand, reveal_info_computer):
+def view_hand_player(Player_hand, Computer_hand, reveal_info_computer, reveal_info_player):
     print("상대의 손패: ", encrypt_Code(Computer_hand, reveal_info_computer))
     print()
-    print()
-    print("플레이어의 손 패: ", Player_hand)
+    print("-------------------------------------------------")
+    print("당신의 손 패: [", end="")
+    for card in Player_hand:
+        if card in Player_hand:
+            if card in reveal_info_player:
+                print("'"+card+"*',", end=" ")
+            else:
+                print("'" +card+"',", end=" ")
+    print("]")
     ###### 암호화된 컴퓨터의 손패를 보여준다. ######
-def find_code_in_reveal(Code, reveal):
-    if (Code in reveal):
-        return True
-    else:
-        return False
-
+    
 def reason_phase_player(draw, Player_hand, Computer_hand, reveal_list_player, reveal_list_computer, Game_over):
     while(True):
         print()
-        view_hand_player(Player_hand, Computer_hand, reveal_list_computer)
+        view_hand_player(Player_hand, Computer_hand, reveal_list_computer, reveal_list_player)
         print()
         while(True):
             try:
@@ -385,7 +387,7 @@ def reason_phase_computer(draw, Player_hand, Computer_hand, reveal_list_player, 
             print("조커를 뽑아 절대 위험도가 최상으로 설정되었습니다")
         elif 0 <= int(draw[0][:-1]) <= 5: #드로우한 패가 0b에 가까운 경우
             if draw[0][-1] in ['w']:
-                abs_risk = int(draw[0][:-1]) * 2 - 1
+                abs_risk = int(draw[0][:-1]) * 2 + 1
             elif draw[0][-1] in ['b']:
                 abs_risk = int(draw[0][:-1]) * 2
             else:
@@ -394,9 +396,9 @@ def reason_phase_computer(draw, Player_hand, Computer_hand, reveal_list_player, 
                 print("디버깅용1")
         elif  6 <= int(draw[0][:-1]) <= 11: #드로우한 패가 11w에 가까운 경우 
             if draw[0][-1] in ['w']:
-                abs_risk = int(draw[0][:-1]) * 2 - (1 + 4*(int(draw[0][:-1]) - 6))
-            elif draw[0][-1] in ['b']:
                 abs_risk = int(draw[0][:-1]) * 2 - (2 + 4*(int(draw[0][:-1]) - 6))
+            elif draw[0][-1] in ['b']:
+                abs_risk = int(draw[0][:-1]) * 2 - (1 + 4*(int(draw[0][:-1]) - 6))
         else:
             print(draw[0][0])
             print("디버깅용2")
@@ -423,10 +425,10 @@ def reason_phase_computer(draw, Player_hand, Computer_hand, reveal_list_player, 
                 rel_risk = int(Computer_hand[idx_draw + 1][:-1]) - int(Computer_hand[idx_draw -2][:-1])
             else:
                 rel_risk = int(Computer_hand[idx_draw+1][:-1]) - int(Computer_hand[idx_draw -1][:-1])
-        risk = rel_risk + abs_risk
+        risk = rel_risk * abs_risk
         print(f"상대 위험도 {rel_risk}")
         print(f"절대 위험도 {abs_risk}")
-        print(f"인공지능은 드로우한 패의 위험도를 {risk}로 판단하고 있습니다.")
+        print(f"인공지능은 드로우한 패의 위험도를 {risk}(으)로 판단하고 있습니다.")
         ##############################################################
         #인공지능이 risk값을 가져가서 위험도 판단
         idx = random.randint(0, len(Player_hand) - 1)
@@ -441,10 +443,9 @@ def reason_phase_computer(draw, Player_hand, Computer_hand, reveal_list_player, 
                 time.sleep(1)
                 reveal_list_player.append(Player_hand[idx])
                 if len(reveal_list_player) != len(Player_hand):
-                    act = 'n' ##### 일단 컴퓨터는 재 추리를 하지 않도록 코드를 짰다.
-                    if act in ['Y', 'y']:
+                    if risk < 20:
                         print("상대는 한 번 더 추리를 시작합니다.")
-                    elif act in ['N', 'n']:
+                    elif risk >= 20:
                         print("상대가 추리를 종료합니다.")
                         break
                     else:
