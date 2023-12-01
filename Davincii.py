@@ -88,8 +88,6 @@ def find_Player_Joker(Code, joker_info): #플레이어가 가져온 패가 조�
         except (AssertionError):
             print("올바른 위치가 아닙니다. 다시 입력해주세요.")
             return find_Player_Joker()
-        if act == len(Code):
-            act -= 1
         if black:
             Code.insert(act, 'jb')
             joker_info.append('jb')
@@ -370,6 +368,67 @@ def reason_phase_computer(draw, Player_hand, Computer_hand, reveal_list_player, 
     ###########################################################
     while(True):
         print()
+        for i, elem in enumerate(Computer_hand):
+            if draw[0] in ['Jb', 'Jw']:
+                if elem == 'jb':
+                    idx_draw = i
+                    break
+                elif elem == 'jw':
+                    idx_draw = i
+                    break
+            if elem == draw[0]:
+                idx_draw = i
+        abs_risk = 0; rel_risk = 0; risk = 0
+        ####################### 절대 위험도 ########################
+        if draw[0][0] in ['J']: #조커를 드로우 했을 경우 위험도를 최상으로 설정한다.
+            abs_risk = 12 #충분히 큰 수
+            print("조커를 뽑아 절대 위험도가 최상으로 설정되었습니다")
+        elif 0 <= int(draw[0][:-1]) <= 5: #드로우한 패가 0b에 가까운 경우
+            if draw[0][-1] in ['w']:
+                abs_risk = int(draw[0][:-1]) * 2 - 1
+            elif draw[0][-1] in ['b']:
+                abs_risk = int(draw[0][:-1]) * 2
+            else:
+                print(draw)
+                print(draw[0][1])
+                print("디버깅용1")
+        elif  6 <= int(draw[0][:-1]) <= 11: #드로우한 패가 11w에 가까운 경우 
+            if draw[0][-1] in ['w']:
+                abs_risk = int(draw[0][:-1]) * 2 - (1 + 4*(int(draw[0][:-1]) - 6))
+            elif draw[0][-1] in ['b']:
+                abs_risk = int(draw[0][:-1]) * 2 - (2 + 4*(int(draw[0][:-1]) - 6))
+        else:
+            print(draw[0][0])
+            print("디버깅용2")
+        
+        ##############################################################
+        ####################### 상대 위험도  ########################
+        if (idx_draw == 0):
+            if Computer_hand[1][0] in ['J']:
+                rel_risk = int(Computer_hand[2][:-1]) - 0
+            else:
+                rel_risk = int(Computer_hand[1][:-1]) - 0
+        elif (idx_draw == len(Computer_hand) - 1):
+            if Computer_hand[len(Computer_hand) - 2][0] in ['J']:
+                rel_risk = 11 - int(Computer_hand[len(Computer_hand) - 3][:-1])
+            else:
+                rel_risk = 11 - int(Computer_hand[len(Computer_hand) - 2][:-1])
+        else:
+            if(Computer_hand[idx_draw + 1][0] in ['J']):
+                if (Computer_hand[idx_draw -1][0] in ['J']):
+                    rel_risk = int(Computer_hand[idx_draw + 2][:-1]) - int(Computer_hand[idx_draw -2][:-1])
+                else:
+                    rel_risk = int(Computer_hand[idx_draw + 2][:-1]) - int(Computer_hand[idx_draw -1][:-1])
+            elif(Computer_hand[idx_draw -1][0] in ['J']):
+                rel_risk = int(Computer_hand[idx_draw + 1][:-1]) - int(Computer_hand[idx_draw -2][:-1])
+            else:
+                rel_risk = int(Computer_hand[idx_draw+1][:-1]) - int(Computer_hand[idx_draw -1][:-1])
+        risk = rel_risk + abs_risk
+        print(f"상대 위험도 {rel_risk}")
+        print(f"절대 위험도 {abs_risk}")
+        print(f"인공지능은 드로우한 패의 위험도를 {risk}로 판단하고 있습니다.")
+        ##############################################################
+        #인공지능이 risk값을 가져가서 위험도 판단
         idx = random.randint(0, len(Player_hand) - 1)
         value = '3b'
         if (value[0] in (['j'] + [f"{i}" for i in range(12)])):
