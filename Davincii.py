@@ -59,7 +59,12 @@ def shuffle_Code(Code): #가져온 코드(list)를 셔플하는 메소드입니�
 
 def receive_Code(draw, Code, receiver): #임의의 패산에서 하나의 패를 receiver에게 전달하는 메소드입니다.
     receiver.append(Code[0])
-    draw.append(Code[0])
+    if Code[0] == "Jw":
+        draw = ['jw']
+    elif Code[0] == "Jb":
+        draw = ['jb']
+    else:
+        draw.append(Code[0])
     Code = Code[1:]
     return (draw, Code, receiver) #남은 패산과 추가된 손패
 
@@ -273,6 +278,7 @@ def reason_phase_player(draw, Player_hand, Computer_hand, reveal_list_player, re
             try:
                 print()
                 value = input("상대의 패를 예측해주세요(ex: 3b, 7w, jb)):")
+                assert(value != "")
                 assert (value[-1] in ['b', 'B', 'w', 'W']) #마지막 글자가 색깔과 관련되어 있는 지를 확인합니다.
                 if (len(value) == 2): #일의 자리 숫자인 경우를 확인합니다.
 
@@ -319,12 +325,6 @@ def reason_phase_player(draw, Player_hand, Computer_hand, reveal_list_player, re
                 print("오답입니다...")
 
                 if draw != []:
-                    if draw[0] == 'Jw':
-                        draw = ['jw']
-                    elif draw[0] == 'Jb':
-                        draw = ['jb']
-                    else:
-                        pass
                     for i, elem in enumerate(Player_hand):
                         if elem == draw[0]:
                             print(f"아까 드로우했던 패 {elem} 를 공개합니다.")
@@ -368,18 +368,19 @@ def reason_phase_computer(draw, Player_hand, Computer_hand, reveal_list_player, 
     while(True):
         print()
         for i, elem in enumerate(Computer_hand):
-            if draw[0] in ['Jb', 'Jw']:
-                if elem == 'jb':
+            if draw != []:
+                if draw[0] in ['Jb', 'Jw']:
+                    if elem == 'jb':
+                        idx_draw = i
+                        break
+                    elif elem == 'jw':
+                        idx_draw = i
+                        break
+                if elem == draw[0]:
                     idx_draw = i
-                    break
-                elif elem == 'jw':
-                    idx_draw = i
-                    break
-            if elem == draw[0]:
-                idx_draw = i
         abs_risk = 0; rel_risk = 0; risk = 0
         ####################### 절대 위험도 ########################
-        if draw[0][0] in ['J']: #조커를 드로우 했을 경우 위험도를 최상으로 설정한다.
+        if draw[0][0] in ['j']: #조커를 드로우 했을 경우 위험도를 최상으로 설정한다.
             abs_risk = 12 #충분히 큰 수
             print("조커를 뽑아 절대 위험도가 최상으로 설정되었습니다")
         elif 0 <= int(draw[0][:-1]) <= 5: #드로우한 패가 0b에 가까운 경우
@@ -403,12 +404,12 @@ def reason_phase_computer(draw, Player_hand, Computer_hand, reveal_list_player, 
         ##############################################################
         ####################### 상대 위험도  ########################
         if (idx_draw == 0):
-            if Computer_hand[1][0] in ['J']:
+            if Computer_hand[1][0] in ['j']:
                 rel_risk = int(Computer_hand[2][:-1]) - 0
             else:
                 rel_risk = int(Computer_hand[1][:-1]) - 0
         elif (idx_draw == len(Computer_hand) - 1):
-            if Computer_hand[len(Computer_hand) - 2][0] in ['J']:
+            if Computer_hand[len(Computer_hand) - 2][0] in ['j']:
                 rel_risk = 11 - int(Computer_hand[len(Computer_hand) - 3][:-1])
             else:
                 rel_risk = 11 - int(Computer_hand[len(Computer_hand) - 2][:-1])
@@ -455,12 +456,6 @@ def reason_phase_computer(draw, Player_hand, Computer_hand, reveal_list_player, 
                 print("상대가 정답을 맞추지 못하였습니다. ")
                 time.sleep(1)
                 if draw != []:
-                    if draw[0] == 'Jw':
-                        draw = ['jw']
-                    elif draw[0] == 'Jb':
-                        draw = ['jb']
-                    else:
-                        pass
                     for i, elem in enumerate(Computer_hand):
                         if elem == draw[0]:
                             print(f"상대가 드로우했던 패 {elem} 를 공개합니다.")
