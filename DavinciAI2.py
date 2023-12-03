@@ -67,7 +67,7 @@ def Player_Start(Code_b, Code_w, Player_hand): #플레이어가 게임을 시작
 def find_Player_Joker(Code, joker_info): #플레이어가 가져온 패가 조커인 경우를 확인하고 조커를  배치하는 메소드입니다. 
     joker = False
     black = False
-    if Code[-1][0] == 'J': #조커는 한 번에 두 개 들어오지 않는다.
+    if Code[-1][0] == 'j': #조커는 한 번에 두 개 들어오지 않는다.
         print('조커 발견')
         joker = True
         if Code[-1][1] == 'b':
@@ -99,7 +99,7 @@ def find_Player_Joker(Code, joker_info): #플레이어가 가져온 패가 조�
 def find_Computer_Joker(Code, joker_info): ######인공지능###### #컴퓨터가 가져온 패가 조커인 경우를 확인하고  조커를 배치하는 메소드입니다.
     joker = False                           #컴퓨터가 조커를 뽑고 배치하는 경우를 random.randint로 구현해놓았습니다. 그러나 이는 인공지능을 사용하여 더욱 효율적으로 배치되어야 합니다.
     black = False
-    if Code[-1][0] == 'J':
+    if Code[-1][0] == 'j':
         joker = True
         if Code[-1][1] == 'b':
             black = True
@@ -137,8 +137,8 @@ def sort_Joker(Code, joker_info): #패를 정렬하고 맨 뒤에 온 조커를 
     return (Code, joker_info)
 
 def add_joker(Code_b, Code_w): #패 분배가 끝나고 조커를 삽입하는 메소드입니다.
-    Code_b.append("Jb") #검은색 조커 추가
-    Code_w.append("Jw") #하얀색 조커 추가
+    Code_b.append("jb") #검은색 조커 추가
+    Code_w.append("jw") #하얀색 조커 추가
     return (Code_b, Code_w)
 
 def draw_phase_player(draw, Code_b, Code_w, joker_info, receiver): #플레이어가 드로우하는 페이즈로 관련 메소드들을 순서에 따라 배치해놓은 메소드입니다.
@@ -295,6 +295,7 @@ from easyAI import TwoPlayerGame, Human_Player, AI_Player, Negamax
 
 class GameOfDavinci(TwoPlayerGame):
     def __init__(self, players):
+        self.Debugging = False
         self.players = players
         self.current_player = 1   #1은 HumanPlayer, 2는 AIplayer를 의미한다. 1부터 게임을 시작한다. 인덱스 저장 위치를 가리키는 용도로 주로 사용했다.
 
@@ -319,6 +320,7 @@ class GameOfDavinci(TwoPlayerGame):
         self.card_candidate = [[], [f"{i}b" for i in range(12)] + [f"{i}w" for i in range(12)] + ['jb', 'jw'] ,[f"{i}b" for i in range(12)] + [f"{i}w" for i in range(12)] + ['jb', 'jw']]
         #1번 인덱스에선 AI플레이어 입장에서 Human플레이어의 패에 대한 후보패, 2번 인덱스에는 Human플레이어 입장에서 AI플레이어의 패에 대한 후보패를를 저장해놓았다. 
         self.unrevealed_index = [[],[i for i in range(len(self.gameboard[1]))], [j for j in range(len(self.gameboard[2]))]]
+        self.revealed_idx_list = []
 
         for card in self.gameboard[2]:
             if card in self.card_candidate[1]:
@@ -327,7 +329,8 @@ class GameOfDavinci(TwoPlayerGame):
         for card in self.gameboard[1]:
             if card in self.card_candidate[2]:
                 self.card_candidate[2].remove(card)
-        
+        if(self.Debugging):
+            print("__init__")
     
     
     def possible_moves(self): #가능한 움직임들의 리스트를 전달하는 클래스이다.
@@ -345,9 +348,9 @@ class GameOfDavinci(TwoPlayerGame):
                 output.remove(content)
 
         if(self.current_player==2):  #현재 플레이어가 AI일경우에만 작동
-            revealed_idx_list = [idx for idx in (range(len(self.gameboard[1]))) if i not in self.unrevealed_index[1]]
+            self.revealed_idx_list = [idx for idx in (range(len(self.gameboard[1]))) if idx not in self.unrevealed_index[1]]
 
-            for idx in revealed_idx_list:    #특정 위치 이전의 카드의 후보군에서 밝혀진 카드의 숫자보다 낮은 카드는 제거한다.
+            for idx in self.revealed_idx_list:    #특정 위치 이전의 카드의 후보군에서 밝혀진 카드의 숫자보다 낮은 카드는 제거한다.
                 if(not self.gameboard[1][idx][:-1].isdigit()):
                     continue
                 for i in range(idx+1,len(self.gameboard[1])):
@@ -429,6 +432,11 @@ class GameOfDavinci(TwoPlayerGame):
             return len(self.reveal_info_computer) == len(self.Computer_hand)
         
     def is_over(self): #게임이 끝나는 조건을 정의하는 클래스이다. 가능한 움직임이 없거나 모든 카드가 다 밝혀졌을 경우를 끝나는 조건으로 정의했다.
+        
+        
+        return (self.possible_moves == [] or self.loss_condition())
+    
+    def show_lose(self):
         if len(self.reveal_info_computer) == len(self.Computer_hand) or self.possible_moves == []:
             print("--------------------------------------------------------------------")
             print("상대방의 모든 패가 공개되었습니다. 당신의 승리입니다.")
@@ -441,18 +449,19 @@ class GameOfDavinci(TwoPlayerGame):
             exit(0)
         else:
             pass
-        return (self.possible_moves == [] or self.loss_condition())
+        
     
 
     def show(self): #Human_Player와 AI_Player의 패를 보여주는 클래스이다.
         view_hand_player(self.Player_hand, self.Computer_hand, self.reveal_info_computer, self.reveal_info_player)
         print()
-        
-        print('AI_HandViewer : ', end = '')
-        for card in self.gameboard[2]:   #드러난 카드는 카드 뒤에 *기호를 붙이도록 작성된 코드이다.
+        if(self.Debugging):
+            print('AI_HandViewer : ', end = '')
+            for card in self.gameboard[2]:   #드러난 카드는 카드 뒤에 *기호를 붙이도록 작성된 코드이다.
 
+                
+                    print(card, end = "  ")
             
-                print(card, end = "  ")
         
         print()
         print()
@@ -493,8 +502,8 @@ while not game.is_over():
                     game.wronganswers.remove(wrongmove)
 
         game.gameboard[game.current_player] = sort_Code(game.Player_hand)
-
-        print("당신이 뽑은 카드 : ", game.draw[game.current_player][-1])  #뽑은 카드 확인용으로 임시로 작성했다.
+        if(game.Code_b!=[] and game.Code_w!=[]):
+            print("당신이 뽑은 카드 : ", game.draw[game.current_player][-1])  #뽑은 카드 확인용으로 임시로 작성했다.
         if(game.draw[game.current_player][-1] in game.card_candidate[game.opponent_index]):
             game.card_candidate[game.opponent_index].remove(game.draw[game.current_player][-1])
         game.show()
@@ -521,6 +530,7 @@ while not game.is_over():
         print("--------------------------------------------------------------------")
         
 
+
         game.draw[game.current_player], game.Code_b, game.Code_w, game.joker_info_computer, game.Computer_hand = draw_phase_computer(game.draw[game.current_player], game.Code_b, game.Code_w, game.joker_info_computer, game.Computer_hand)
         game.gameboard[game.current_player] = sort_Code(game.Computer_hand)
         #print("컴퓨터가 뽑은 카드 : ", game.draw[game.current_player][-1])
@@ -529,10 +539,12 @@ while not game.is_over():
         
         
         poss = game.possible_moves()
-        
-        for index, move in enumerate(poss):
-            print("{} : {}".format(index, move)) #possiblemove들을 출력하는듯 하다.
+        if(game.Debugging):
+            for index, move in enumerate(poss):
+                print("{} : {}".format(index, move)) #possiblemove들을 출력하는듯 하다.
 
+        
+        
         move = game.get_move()
         print("AI plays {}".format(move))
 
@@ -570,7 +582,8 @@ while not game.is_over():
         if game.draw[game.current_player] != []:
             for i, elem in enumerate(game.gameboard[game.current_player]):
                 if elem == game.draw[game.current_player][-1]:
-                    print(f"아까 드로우했던 패 {elem} 를 공개합니다.")
+                    if(game.Code_b!=[] and game.Code_w!=[]):
+                        print(f"아까 드로우했던 패 {elem} 를 공개합니다.")
                     #print("AI플레이어가 예측할 수 있는 당신 패의 후보 인덱스 : ", self.card_candidate[self.opponent_index])
 
                 else:
@@ -581,7 +594,10 @@ while not game.is_over():
                 pass
         print("--------------------------------------------------------------------")
 
-    
+    if(game.Debugging):
+        print("당신(AI)가 뽑은 카드 리스트", game.draw[game.current_player])
+        print("당신의 밝혀진 패의 인덱스", game.revealed_idx_list)
+
     game.play_move(move)
     #밝혀진 인덱스를 예상 조합에서 제외하기 위해서 작성해봄.
     game.unrevealed_index = [[],[i for i in range(len(game.gameboard[1]))], [j for j in range(len(game.gameboard[2]))]]
@@ -607,7 +623,11 @@ while not game.is_over():
     
     print("com_reveal",game.reveal_info_computer)
     print("player_reveal",game.reveal_info_player)
+    
     game.show()
+    
+
     ans = input("계속 진행하시겠습니까?(y/n)")
     while(ans!="y"):
-        ans = input("계속 진행하시겠습니까?(y/n)")
+        ans = input("계속 진행하시겠습니까?(y/n)") 
+game.show_lose()
