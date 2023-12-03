@@ -70,6 +70,11 @@ def sort_Code(Code): # 컴퓨터나 플레이어가 패를 가져온 후 올바�
 def find_Player_Joker(Code, joker_info): #플레이어가 가져온 패가 조커인 경우를 확인하고 조커를  배치하는 메소드입니다. 
     joker = False
     black = False
+    if Code[-1] in ['jb']:
+        Code = Code[:-1]
+    if Code[-1] in ['jw']:
+        Code = Code[:-1]
+    print(Code)
     if Code[-1][0] == 'J': #조커는 한 번에 두 개 들어오지 않는다.
         print('조커 발견')
         joker = True
@@ -111,11 +116,9 @@ def find_Computer_Joker(Code, joker_info): ######인공지능###### #컴퓨터�
         if act == len(Code):
             act -= 1
         if black:
-            Code.insert(act, 'jb')
             joker_info.append('jb')
             joker_info.append(act)
         else:
-            Code.insert(act, 'jw')
             joker_info.append('jw')
             joker_info.append(act)
         Code = Code[:-1]
@@ -139,12 +142,6 @@ def sort_Joker(Code, joker_info): #패를 정렬하고 맨 뒤에 온 조커를 
     return (Code, joker_info)
 
 def draw_phase_player(draw, Code_b, Code_w, joker_info, receiver): #플레이어가 드로우하는 페이즈로 관련 메소드들을 순서에 따라 배치해놓은 메소드입니다.
-    if receiver[-1] == 'jb':
-        receiver = receiver[:-1]
-    elif receiver[-1] == 'jw':
-        receiver = receiver[:-1]
-    else:
-        pass
     if (len(Code_b) == 0) and (len(Code_w) == 0):
         print("더 이상 가져올 수 있는 패가 없어 과정을 생략합니다.")
     else:
@@ -416,12 +413,12 @@ def reason_phase_computer(draw, Player_hand, Computer_hand, reveal_list_player, 
             else:
                 rel_risk = 11 - int(Computer_hand[len(Computer_hand) - 2][:-1])
         else:
-            if(Computer_hand[idx_draw + 1][0] in ['J']):
-                if (Computer_hand[idx_draw -1][0] in ['J']):
+            if(Computer_hand[idx_draw + 1][0] in ['j']):
+                if (Computer_hand[idx_draw -1][0] in ['j']):
                     rel_risk = int(Computer_hand[idx_draw + 2][:-1]) - int(Computer_hand[idx_draw -2][:-1])
                 else:
                     rel_risk = int(Computer_hand[idx_draw + 2][:-1]) - int(Computer_hand[idx_draw -1][:-1])
-            elif(Computer_hand[idx_draw -1][0] in ['J']):
+            elif(Computer_hand[idx_draw -1][0] in ['j']):
                 rel_risk = int(Computer_hand[idx_draw + 1][:-1]) - int(Computer_hand[idx_draw -2][:-1])
             else:
                 rel_risk = int(Computer_hand[idx_draw+1][:-1]) - int(Computer_hand[idx_draw -1][:-1])
