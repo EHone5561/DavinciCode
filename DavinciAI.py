@@ -338,7 +338,8 @@ class GameOfDavinci(TwoPlayerGame):
             for card in self.card_candidate[self.opponent_index]:
                 if(self.gameboard[self.opponent_index][i][-1] == card[-1]):
                     output.append([i, card])
-            
+        
+        
         for content in self.wronganswers[self.current_player]:
             if content in output:
                 output.remove(content)
@@ -356,6 +357,21 @@ class GameOfDavinci(TwoPlayerGame):
                     min_idx = idx_list.index(i)
                     for card in output[min_idx:] :
                         if(card[1][:-1].isdigit() and int(card[1][:-1]) < int(self.gameboard[1][idx][:-1])):
+                            if(card in output):
+                                output.remove(card)
+
+            for idx in self.revealed_idx_list:    #특정 위치 이전의 카드의 후보군에서 밝혀진 카드의 숫자보다 낮은 카드는 제거한다.
+                reversed_output = output[::-1]
+                #print(reversed_output)
+                if(not self.gameboard[1][idx][:-1].isdigit()):
+                    continue
+                for i in range(idx-1,-1,-1):          # 0 1 2 3 4  -> 0 1 2 3 
+                    idx_list = [j[0] for j in reversed_output]
+                    if(i not in idx_list):
+                        continue
+                    min_idx = idx_list.index(i)
+                    for card in reversed_output[min_idx:] :
+                        if(card[1][:-1].isdigit() and int(card[1][:-1]) > int(self.gameboard[1][idx][:-1])):
                             if(card in output):
                                 output.remove(card)
 
@@ -443,9 +459,15 @@ class GameOfDavinci(TwoPlayerGame):
             print("--------------------------------------------------------------------")
             print("플레이어의 모든 패가 공개되었습니다. 당신의 패배입니다.")
             print("--------------------------------------------------------------------")
-            exit(0)
+
         else:
             pass
+        print('AI_HandViewer : ', end = '')
+        for card in self.gameboard[2]:   #드러난 카드는 카드 뒤에 *기호를 붙이도록 작성된 코드이다.
+            print(card, end = "  ")
+        print()
+        view_hand_player(self.gameboard[1], self.gameboard[2], self.reveal_info_computer, self.reveal_info_player)
+
         
     
 
@@ -455,9 +477,7 @@ class GameOfDavinci(TwoPlayerGame):
         if(self.Debugging):
             print('AI_HandViewer : ', end = '')
             for card in self.gameboard[2]:   #드러난 카드는 카드 뒤에 *기호를 붙이도록 작성된 코드이다.
-
-                
-                    print(card, end = "  ")
+                print(card, end = "  ")
             
         
         print()
@@ -479,10 +499,10 @@ print("--------------------------------------------------------------------")
 print("곧 게임을 시작합니다.")
 print("--------------------------------------------------------------------")
 time.sleep(1)
-game = GameOfDavinci([Human_Player(),AI_Player(Negamax(4))])
+game = GameOfDavinci([Human_Player(),AI_Player(Negamax(3))])
 
 while not game.is_over():
-    continued = True
+    continued = False
     game.show()
     if game.current_player==1:  # we are assuming player 1 is a Human_Player
         print("--------------------------------------------------------------------")
@@ -498,7 +518,7 @@ while not game.is_over():
                 game.draw[game.current_player][i] = "jw"
             elif(card == "Jb"):
                 game.draw[game.current_player][i] = "jb"
-
+        
         if (game.wronganswers[game.opponent_index] != []):
             for wrongmove in game.wronganswers[game.opponent_index]:
                 if wrongmove[0] == game.gameboard[game.current_player].index(game.draw[game.current_player][-1]):
@@ -521,10 +541,10 @@ while not game.is_over():
         
                      
         print("< 주의! 색깔이 다를 경우 동작하지 않음> ")
-        idx, value = reason_phase_player(game.Computer_hand)
+        idx, value = reason_phase_player(game.gameboard[game.opponent_index])
         move = [idx, value]
         while (move not in poss):
-            idx, value = reason_phase_player(game.Computer_hand)
+            idx, value = reason_phase_player(game.gameboard[game.opponent_index])
             move = [idx, value]
 
     else:  # we are assuming player 2 is an AI_Player
@@ -554,8 +574,8 @@ while not game.is_over():
         if(game.Debugging):
             for index, move in enumerate(poss):
                 print("{} : {}".format(index, move)) #possiblemove들을 출력하는듯 하다.
-
-        
+        if(not game.possible_moves):
+            break
         
         move = game.get_move()
         print("AI plays {}".format(move))
