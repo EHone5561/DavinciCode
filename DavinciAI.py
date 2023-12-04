@@ -83,7 +83,6 @@ def find_Player_Joker(Code, joker_info): #플레이어가 가져온 패가 조�
         Code = Code[:-1]
     if Code[-1] in ['jw']:
         Code = Code[:-1]
-    print(Code)
     if Code[-1][0] == 'J': #조커는 한 번에 두 개 들어오지 않는다.
         print('조커 발견')
         joker = True
